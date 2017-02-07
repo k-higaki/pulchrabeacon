@@ -13,7 +13,7 @@ foreach ($json_object->events as $event) {
 
 function api_post_request($token, $message) {
     $url = 'https://api.line.me/v2/bot/message/reply';
-    $channel_access_token = '<BOTÝ’è‰æ–Ê‚©‚çŽæ“¾‚µ‚½ƒg[ƒNƒ“>';
+    $channel_access_token = 'jdODSUiXGHGh8Qr5EqIo9bMx7D9mkU0SxgzgGAANTexfsgxMJzgPMKSqHtaUOSd/EYg+2yz6kXT1tO2tl4v6v0vz++JmB7GL8OZQV+wDH6G+k5F05qsFSYvw2CdnGCdOz6pxxBeo6xumwqr+ehLx9AdB04t89/1O/w1cDnyilFU=';
     $headers = array(
         'Content-Type: application/json',
         "Authorization: Bearer {$channel_access_token}"
