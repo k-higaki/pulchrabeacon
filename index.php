@@ -1,37 +1,29 @@
-<?php
+<?php // callback.php
 
-$json_string = file_get_contents('php://input');
-$json_object = json_decode($json_string);
+define("LINE_MESSAGING_API_CHANNEL_SECRET", '2fc981e2e4b2a8584da33b9d9e705eb0');
+define("LINE_MESSAGING_API_CHANNEL_TOKEN", 'jdODSUiXGHGh8Qr5EqIo9bMx7D9mkU0SxgzgGAANTexfsgxMJzgPMKSqHtaUOSd/EYg+2yz6kXT1tO2tl4v6v0vz++JmB7GL8OZQV+wDH6G+k5F05qsFSYvw2CdnGCdOz6pxxBeo6xumwqr+ehLx9AdB04t89/1O/w1cDnyilFU=');
 
-foreach ($json_object->events as $event) {
-    if('message' == $event->type){
-        api_post_request($event->replyToken, $event->message->text);
-    }else if('beacon' == $event->type){
-        api_post_request($event->replyToken, 'BEACONイベント!!');
+require __DIR__."/../vendor/autoload.php";
+
+$bot = new \LINE\LINEBot(
+    new \LINE\LINEBot\HTTPClient\CurlHTTPClient(LINE_MESSAGING_API_CHANNEL_TOKEN),
+    ['channelSecret' => LINE_MESSAGING_API_CHANNEL_SECRET]
+);
+
+$signature = $_SERVER["HTTP_".\LINE\LINEBot\Constant\HTTPHeader::LINE_SIGNATURE];
+$body = file_get_contents("php://input");
+
+$events = $bot->parseEventRequest($body, $signature);
+
+foreach ($events as $event) {
+    if ($event instanceof \LINE\LINEBot\Event\MessageEvent\TextMessage) {
+        $reply_token = $event->getReplyToken();
+        $text = $event->getText();
+        $bot->replyText($reply_token, $text);
+//* ================= ここから追記 =============================*/
+    } elseif ($event instanceof \LINE\LINEBot\Event\BeaconDetectionEvent) {
+        $reply_token = $event->getReplyToken();
+        $bot->replyText($reply_token, "近くにいますね？");
+//* ================= ここまで追記 =============================*/
     }
-}
-
-function api_post_request($token, $message) {
-    $url = 'https://api.line.me/v2/bot/message/reply';
-    $channel_access_token = 'jdODSUiXGHGh8Qr5EqIo9bMx7D9mkU0SxgzgGAANTexfsgxMJzgPMKSqHtaUOSd/EYg+2yz6kXT1tO2tl4v6v0vz++JmB7GL8OZQV+wDH6G+k5F05qsFSYvw2CdnGCdOz6pxxBeo6xumwqr+ehLx9AdB04t89/1O/w1cDnyilFU=';
-    $headers = array(
-        'Content-Type: application/json',
-        "Authorization: Bearer {$channel_access_token}"
-    );
-    $post = array(
-        'replyToken' => $token,
-        'messages' => array(
-            array(
-                'type' => 'text',
-                'text' => $message
-            )
-        )
-    );
-
-    $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_POST, true);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($post));
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_exec($curl);
 }
