@@ -20,10 +20,10 @@ foreach ($events as $event) {
         $reply_token = $event->getReplyToken();
         $text = $event->getText();
         $bot->replyText($reply_token, $text);
-//* ================= Ç±Ç±Ç©ÇÁí«ãL =============================*/
     } elseif ($event instanceof \LINE\LINEBot\Event\BeaconDetectionEvent) {
         $reply_token = $event->getReplyToken();
         $bot->replyText($reply_token, "ãﬂÇ≠Ç…Ç¢Ç‹Ç∑ÇÀÅH");
-//* ================= Ç±Ç±Ç‹Ç≈í«ãL =============================*/
     }
 }
+
+echo "OK";
