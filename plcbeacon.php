@@ -1,31 +1,26 @@
-<?php
-require_once __DIR__ . '/vendor/autoload.php';
+<?php // callback.php
 
-//POST
-$input = file_get_contents('php://input');
-$json = json_decode($input);
-$event = $json->events[0];
-$httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient('Channel Access Token');
-$bot = new \LINE\LINEBot($httpClient, ['channelSecret' => 'Channel Secret']);
+define("LINE_MESSAGING_API_CHANNEL_SECRET", '2fc981e2e4b2a8584da33b9d9e705eb0');
+define("LINE_MESSAGING_API_CHANNEL_TOKEN", 'jdODSUiXGHGh8Qr5EqIo9bMx7D9mkU0SxgzgGAANTexfsgxMJzgPMKSqHtaUOSd/EYg+2yz6kXT1tO2tl4v6v0vz++JmB7GL8OZQV+wDH6G+k5F05qsFSYvw2CdnGCdOz6pxxBeo6xumwqr+ehLx9AdB04t89/1O/w1cDnyilFU=');
 
-//イベントタイプ判別
-if ("message" == $event->type) {            //一般的なメッセージ(文字・イメージ・音声・位置情報・スタンプ含む)
-    //テキストメッセージにはオウムで返す
-    if ("text" == $event->message->type) {
-        $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder($event->message->text);
-    } else {
-        $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder("ごめん、わかんなーい(*´ω｀*)");
+require __DIR__."/../vendor/autoload.php";
+
+$bot = new \LINE\LINEBot(
+    new \LINE\LINEBot\HTTPClient\CurlHTTPClient(LINE_MESSAGING_API_CHANNEL_TOKEN),
+    ['channelSecret' => LINE_MESSAGING_API_CHANNEL_SECRET]
+);
+
+$signature = $_SERVER["HTTP_".\LINE\LINEBot\Constant\HTTPHeader::LINE_SIGNATURE];
+$body = file_get_contents("php://input");
+
+$events = $bot->parseEventRequest($body, $signature);
+
+foreach ($events as $event) {
+    if ($event instanceof \LINE\LINEBot\Event\MessageEvent\TextMessage) {
+        $reply_token = $event->getReplyToken();
+        $text = $event->getText();
+        $bot->replyText($reply_token, $text);
     }
-} elseif ("follow" == $event->type) {        //お友達追加時
-    $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder("よろしくー");
-} elseif ("join" == $event->type) {           //グループに入ったときのイベント
-    $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder('こんにちは よろしくー');
-} elseif ('beacon' == $event->type) {         //Beaconイベント
-    $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder('誰かがいんしたお(・∀・) ');
-} else {
-    //なにもしない
 }
-$response = $bot->replyMessage($event->replyToken, $textMessageBuilder);
-syslog(LOG_EMERG, print_r($event->replyToken, true));
-syslog(LOG_EMERG, print_r($response, true));
-return;
+
+echo "OK";
