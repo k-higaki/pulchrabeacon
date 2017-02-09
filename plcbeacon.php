@@ -1,29 +1,31 @@
-<?php // callback.php
+<?php
+$request = file_get_contents("php://input");
+$json = json_decode($request);
+$content = $json->result[0]->content;
 
-define("LINE_MESSAGING_API_CHANNEL_SECRET", '2fc981e2e4b2a8584da33b9d9e705eb0');
-define("LINE_MESSAGING_API_CHANNEL_TOKEN", 'jdODSUiXGHGh8Qr5EqIo9bMx7D9mkU0SxgzgGAANTexfsgxMJzgPMKSqHtaUOSd/EYg+2yz6kXT1tO2tl4v6v0vz++JmB7GL8OZQV+wDH6G+k5F05qsFSYvw2CdnGCdOz6pxxBeo6xumwqr+ehLx9AdB04t89/1O/w1cDnyilFU=');
-
-require __DIR__."/../vendor/autoload.php";
-
-$bot = new \LINE\LINEBot(
-    new \LINE\LINEBot\HTTPClient\CurlHTTPClient(LINE_MESSAGING_API_CHANNEL_TOKEN),
-    ['channelSecret' => LINE_MESSAGING_API_CHANNEL_SECRET]
+$header = array(
+    'Content-Type: application/json; charser=UTF-8',
+    'X-Line-ChannelID: 【1499841386】',  // Channel ID
+    'X-Line-ChannelSecret: 【2fc981e2e4b2a8584da33b9d9e705eb0】',  // ChannelID Secret
+);
+$post = array(
+    'to' => array($content->from),
+    'toChannel' => 1383378250,  // Fixed value.
+    'eventType' => '138311608800106203',  // Fixed value.
+    'content' => array(
+        'contentType' => 1,
+        'toType' => 1,
+    ),
 );
 
-$signature = $_SERVER["HTTP_".\LINE\LINEBot\Constant\HTTPHeader::LINE_SIGNATURE];
-$body = file_get_contents("php://input");
+// ボットが返答する内容。ここでは送られた内容を復唱するだけ
+$post['content']['text'] = $content->text.' ですね';
 
-$events = $bot->parseEventRequest($body, $signature);
+$post = json_encode($post);
 
-foreach ($events as $event) {
-    if ($event instanceof \LINE\LINEBot\Event\MessageEvent\TextMessage) {
-        $reply_token = $event->getReplyToken();
-        $text = $event->getText();
-        $bot->replyText($reply_token, $text);
-    } elseif ($event instanceof \LINE\LINEBot\Event\BeaconDetectionEvent) {
-        $reply_token = $event->getReplyToken();
-        $bot->replyText($reply_token, "�߂��ɂ��܂��ˁH");
-    }
-}
-
-echo "OK";
+$ch = curl_init("https://trialbot-api.line.me/v1/events");
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$result = curl_exec($ch);
