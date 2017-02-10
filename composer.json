@@ -1,0 +1,12 @@
+{
+    "name": "bf-sr/pulchrabeacon",
+    "authors": [
+        {
+            "name": "k-higaki",
+            "email": "k-higaki@be-full.jp"
+        }
+    ],
+    "require": {
+        "linecorp/line-bot-sdk": "^1.4"
+    }
+}
